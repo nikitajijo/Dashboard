@@ -89,10 +89,10 @@ with st.sidebar:
     selected_device_type = st.selectbox("Select Device Type", result_df['device_type'].unique())
 
     # Color selection for :C
-    color_c = st.color_picker("Select Color for :C", value='#1f77b4')
+    color_c = st.color_picker("Select Color for C", value='#1f77b4')
 
     # Color selection for :V1
-    color_v1 = st.color_picker("Select Color for :V1", value='#ff7f0e')
+    color_v1 = st.color_picker("Select Color for V1", value='#ff7f0e')
 
 # Filter DataFrame based on selected experiment, ad_type, var_2, and device type
 filtered_df = result_df[
@@ -120,8 +120,8 @@ fig_c_v1 = px.line(
 fig_c_v1.update_traces(line_color=color_c, selector=dict(name=':C'))
 fig_c_v1.update_traces(line_color=color_v1, selector=dict(name=':V1'))
 
-fig_c_v1.update_yaxes(title_text=':C', secondary_y=False)
-fig_c_v1.update_yaxes(title_text=':V1', secondary_y=True)
+fig_c_v1.update_yaxes(title_text='C', secondary_y=False)
+fig_c_v1.update_yaxes(title_text='V1', secondary_y=True)
 
 filtered_df['percentage_change'] = filtered_df[':V1'] / filtered_df[':C'] - 1
 filtered_df.replace([np.inf, -np.inf, np.nan], 0, inplace=True)
