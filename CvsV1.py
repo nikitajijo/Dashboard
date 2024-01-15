@@ -1,6 +1,6 @@
-
 import streamlit as st
 import pandas as pd
+import numpy as np
 import plotly.express as px
 
 # Extract the sheet ID from the provided URL
@@ -64,23 +64,35 @@ result_df[':V1'] = grouped_df[':V1'].transform(fillna_with_group_mean)
 
 # Calculate % change and add a new column
 result_df['%change'] = (result_df[':V1'] / result_df[':C']) - 1
+result_df.replace([np.inf, -np.inf, np.nan], 0, inplace=True)
+
 
 st.title("Dashboard for C vs V1 Over Time")
 
-# Dropdown for variable selection
-selected_metric = st.selectbox("Select Metric", result_df['metric'].unique())
+# Sidebar for dropdowns
+with st.sidebar:
+    st.header("Filter Options")
 
-# Dropdown for experiment selection
-selected_experiment = st.selectbox("Select Experiment", result_df['experiment'].unique())
+    # Dropdown for variable selection
+    selected_metric = st.selectbox("Select Metric", result_df['metric'].unique())
 
-# Dropdown for ad_type selection
-selected_ad_type = st.selectbox("Select Ad Type", result_df['ad_type'].unique())
+    # Dropdown for experiment selection
+    selected_experiment = st.selectbox("Select Experiment", result_df['experiment'].unique())
 
-# Dropdown for var_2 selection
-selected_var_2 = st.selectbox("Select var_2", result_df['var_2'].unique())
+    # Dropdown for ad_type selection
+    selected_ad_type = st.selectbox("Select Ad Type", result_df['ad_type'].unique())
 
-# Dropdown for device type selection
-selected_device_type = st.selectbox("Select Device Type", result_df['device_type'].unique())
+    # Dropdown for var_2 selection
+    selected_var_2 = st.selectbox("Select var_2", result_df['var_2'].unique())
+
+    # Dropdown for device type selection
+    selected_device_type = st.selectbox("Select Device Type", result_df['device_type'].unique())
+
+    # Color selection for :C
+    color_c = st.color_picker("Select Color for :C", value='#1f77b4')
+
+    # Color selection for :V1
+    color_v1 = st.color_picker("Select Color for :V1", value='#ff7f0e')
 
 # Filter DataFrame based on selected experiment, ad_type, var_2, and device type
 filtered_df = result_df[
@@ -94,8 +106,8 @@ filtered_df = result_df[
 # Sort DataFrame by 'date'
 filtered_df = filtered_df.sort_values('date')
 
-# Line chart with secondary y-axis
-fig = px.line(
+# Line chart for :C and :V1
+fig_c_v1 = px.line(
     filtered_df,
     x='date',
     y=[':C', ':V1'],
@@ -103,8 +115,26 @@ fig = px.line(
     labels={'value': selected_metric},
     line_shape="linear"
 )
-fig.update_yaxes(title_text=':C', secondary_y=False)
-fig.update_yaxes(title_text=':V1', secondary_y=True)
 
-# Show the chart
-st.plotly_chart(fig)
+# Set colors for :C and :V1
+fig_c_v1.update_traces(line_color=color_c, selector=dict(name=':C'))
+fig_c_v1.update_traces(line_color=color_v1, selector=dict(name=':V1'))
+
+fig_c_v1.update_yaxes(title_text=':C', secondary_y=False)
+fig_c_v1.update_yaxes(title_text=':V1', secondary_y=True)
+
+filtered_df['percentage_change'] = filtered_df[':V1'] / filtered_df[':C'] - 1
+filtered_df.replace([np.inf, -np.inf, np.nan], 0, inplace=True)
+
+fig_percentage_change = px.line(
+    filtered_df,
+    x='date',
+    y='percentage_change',
+    title="Percentage Change Over Time",
+    labels={'percentage_change': 'Percentage Change'},
+    line_shape="linear"
+)
+
+# Show both charts
+st.plotly_chart(fig_c_v1)
+st.plotly_chart(fig_percentage_change)
